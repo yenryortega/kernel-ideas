@@ -1,0 +1,16 @@
+{
+  "name": "Kernel Ideas",
+  "short_name": "Kernel",
+  "description": "Big ideas from books, podcasts, articles and videos, distilled into cards.",
+  "start_url": "/#feed",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141a22",
+  "theme_color": "#141a22",
+  "icons": [
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/static/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
