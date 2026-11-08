@@ -1,0 +1,138 @@
+{
+  "version": 2,
+  "illustrations": {
+    "style": "3d-casual-life",
+    "target_ratio": 1.0,
+    "format": "png-standard (free tier, credited on #credits)",
+    "slots": {
+      "habits": {
+        "id": "61d5889105643000017e5e08",
+        "heading": "Blue desk calendar",
+        "file": "static/illustrations/habits.png",
+        "free_distribution": false,
+        "width": 456,
+        "height": 397
+      },
+      "focus": {
+        "id": "66f73c4b996d0a00017e02d2",
+        "heading": "blue arrow and darts target",
+        "file": "static/illustrations/focus.png",
+        "free_distribution": false,
+        "width": 456,
+        "height": 451
+      },
+      "mindset": {
+        "id": "6351b3c7918d1500016c7dd2",
+        "heading": "light bulb with green leaf inside",
+        "file": "static/illustrations/mindset.png",
+        "width": 310,
+        "height": 456,
+        "free_distribution": false
+      },
+      "learning": {
+        "id": "6058b8e54bde62001cbc6d28",
+        "heading": "tall stack of books",
+        "file": "static/illustrations/learning.png",
+        "free_distribution": false,
+        "width": 425,
+        "height": 456
+      },
+      "money": {
+        "id": "61e828ec78868100015b7b25",
+        "heading": "Piggy bank with coins",
+        "file": "static/illustrations/money.png",
+        "free_distribution": false,
+        "width": 456,
+        "height": 375
+      },
+      "people": {
+        "id": "642c3cca3d00d400012db060",
+        "heading": "heart hug",
+        "file": "static/illustrations/people.png",
+        "free_distribution": false,
+        "width": 456,
+        "height": 366
+      },
+      "health": {
+        "id": "69de6cef8246c825d40b327a",
+        "heading": "Orange sneakers",
+        "file": "static/illustrations/health.png",
+        "free_distribution": false,
+        "width": 456,
+        "height": 456
+      },
+      "decisions": {
+        "id": "69de63658246c825d40b3202",
+        "heading": "Business strategy",
+        "file": "static/illustrations/decisions.png",
+        "free_distribution": false,
+        "width": 456,
+        "height": 456
+      },
+      "creativity": {
+        "id": "630e5853f2eced00015deeae",
+        "heading": "color palette and brush",
+        "file": "static/illustrations/creativity.png",
+        "free_distribution": false,
+        "width": 454,
+        "height": 456
+      },
+      "leadership": {
+        "id": "69de6d988246c825d40b3286",
+        "heading": "Megaphone",
+        "file": "static/illustrations/leadership.png",
+        "free_distribution": false,
+        "width": 456,
+        "height": 456
+      },
+      "calm": {
+        "id": "6058b9854bde62001cbc6d9d",
+        "heading": "monstera plant with holes in white pot",
+        "file": "static/illustrations/calm.png",
+        "free_distribution": false,
+        "width": 427,
+        "height": 456
+      },
+      "career": {
+        "id": "6656244b89a3590001ac12ef",
+        "heading": "stairs up with success flag",
+        "file": "static/illustrations/career.png",
+        "free_distribution": false,
+        "width": 445,
+        "height": 456
+      },
+      "login": {
+        "id": "5fd8e6e795acab0028073e5d",
+        "heading": "young woman imagining things while reading e-book",
+        "file": "static/illustrations/login.png",
+        "free_distribution": false,
+        "width": 456,
+        "height": 386
+      },
+      "empty": {
+        "id": "6567bf13fbac4d0001ac066c",
+        "heading": "open white cardboard box",
+        "file": "static/illustrations/empty.png",
+        "free_distribution": false,
+        "width": 456,
+        "height": 251
+      },
+      "search": {
+        "id": "645b214319fbef0001e5785f",
+        "heading": "magnifying glass green",
+        "file": "static/illustrations/search.png",
+        "free_distribution": false,
+        "width": 407,
+        "height": 456
+      },
+      "add": {
+        "id": "624550626a43cc00010facf9",
+        "heading": "Writing and note taking tools with glasses on notebook",
+        "file": "static/illustrations/add.png",
+        "free_distribution": false,
+        "width": 438,
+        "height": 456
+      }
+    }
+  }
+}
