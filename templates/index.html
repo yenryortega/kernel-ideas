@@ -44,7 +44,7 @@
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5;
   overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
@@ -600,7 +600,10 @@ h1, h2, h3 { text-wrap: balance; }
 .sc-btn.l { left: -8px; } .sc-btn.r { right: -8px; }
 .sc-btn:active { transform: scale(.92); }
 .scroller[data-l] .sc-btn.l, .scroller[data-r] .sc-btn.r { opacity: 1; pointer-events: auto; }
-@media (hover: hover) and (pointer: fine) { .scroller .tiles { cursor: grab; } }
+@media (hover: hover) and (pointer: fine) {
+  .scroller .tiles { cursor: grab; }
+  .scroller:not(:hover)[data-l] .sc-btn.l, .scroller:not(:hover)[data-r] .sc-btn.r { opacity: 0; pointer-events: none; transform: scale(.9); }
+}
 @media (hover: none), (pointer: coarse) { .sc-btn { display: none; } }
 
 @media (prefers-reduced-motion: reduce) {
