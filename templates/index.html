@@ -510,6 +510,11 @@ h1, h2, h3 { text-wrap: balance; }
 .cover .cv-illo { position: absolute; z-index: 2; right: 6%; top: 18%; width: 46%; height: auto; object-fit: contain;
   filter: drop-shadow(0 8px 10px rgba(0,0,0,.25)); }
 .cover.video .cv-illo, .cover.podcast .cv-illo, .cover.mini .cv-illo { display: none; }
+/* original cover art (static/covers.js) draws its own object, so the generic play badge steps aside */
+.cover.art-on .play { display: none; }
+.card-motif { position: absolute; right: 6px; bottom: -14px; z-index: 1; width: 214px; height: 214px; max-width: 64%;
+  filter: drop-shadow(0 14px 16px rgba(0,0,0,.2)); animation: pop .5s cubic-bezier(.2, .9, .3, 1.2) both; }
+.card-motif .motif { width: 100%; height: 100%; display: block; }
 .cover-tile .cover { transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out); }
 @media (hover: hover) and (pointer: fine) {
   .cover-tile:hover .cover { transform: translateY(-5px) rotate(-1.2deg); box-shadow: 0 24px 34px -18px var(--tc); }
@@ -580,7 +585,7 @@ h1, h2, h3 { text-wrap: balance; }
 @media (prefers-reduced-motion: reduce) {
   .deck::before, .deck::after, .card, .card.settle, .card.out-l, .card.out-r, .progress span, .cover-tile .cover, .ring-fill,
   .tab-ind, .sheet-list .ck, .sheet.closing, .scrim.closing, .toast.out { transition: none; }
-  .round.big.pop svg, .burst i, .skel, .covers.enter .cover-tile, .covers.enter .group-h, .src-hero > div > *, .idea-list .idea-row,
+  .card-motif, .round.big.pop svg, .burst i, .skel, .covers.enter .cover-tile, .covers.enter .group-h, .src-hero > div > *, .idea-list .idea-row,
   .heat .c, .trow .track span, .panel, .goal-ring.just svg, .confetti i, .tabs a[aria-current="page"] svg, .scrim, .sheet,
   .sheet-list button, .toast { animation: none; }
   .burst, .confetti { display: none; }
@@ -764,6 +769,7 @@ h1, h2, h3 { text-wrap: balance; }
 </div>
 
 <div class="toast" id="toast" role="status" hidden></div>
+<script src="/static/covers.js"></script>
 <script>{% raw %}
 /* Kernel Ideas — front end (vanilla JS, talks to the Flask API) */
 (() => {
@@ -899,10 +905,12 @@ function kindArt(src) {
   }
   return art(seed, W, H, src.kind === "video" ? 4 : undefined);
 }
+const KA = window.KernelArt;
 function cover(src, mini = false) {
   const topic = src.topic || (src.ideaTopic) || "focus";
-  return `<div class="cover ${src.kind}${mini ? " mini" : ""}" style="--tc:${tc(topic)}">${kindArt(src)}
-    ${mini ? "" : illo(topic, "cv-illo")}<i class="gloss"></i>
+  const artwork = KA ? KA.cover(src.title, src.kind, tc(topic)) : kindArt(src);
+  return `<div class="cover ${src.kind}${mini ? " mini" : ""}${KA ? " art-on" : ""}" style="--tc:${tc(topic)}">${artwork}
+    <i class="gloss"></i>
     <span class="kb">${icon(src.kind, 12, 2.2)}${KINDS[src.kind]}</span>
     ${src.kind === "video" ? `<span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></span>` : ""}
     <div class="ct"><b>${esc(src.title)}</b><small>${esc(src.author || "")}</small></div></div>`;
@@ -1015,7 +1023,7 @@ function renderCard() {
   const t = TOPICS[it.topic] || TOPICS.focus, s = it.source;
   card.style.setProperty("--tc", t.c);
   card.innerHTML = `
-    <div class="card-art">${art("idea" + it.id + it.title)}<span class="halo"></span>${illo(it.topic, "card-illo")}<span class="kind-pill">${icon(s.kind, 14, 2.2)}${KINDS[s.kind]}</span><div class="glyph">${icon(it.topic, 34, 1.8)}</div></div>
+    <div class="card-art">${art("idea" + it.id + it.title)}<span class="halo"></span>${KA ? `<span class="card-motif">${KA.motif(s.title, s.kind, t.c)}</span>` : illo(it.topic, "card-illo")}<span class="kind-pill">${icon(s.kind, 14, 2.2)}${KINDS[s.kind]}</span><div class="glyph">${icon(it.topic, 34, 1.8)}</div></div>
     <div class="card-body">
       <div class="meta"><span class="pill">${t.label}</span><span>${readTime(it)} read · ${it.position + 1} of ${s.count}</span></div>
       <h2>${esc(it.title)}</h2>

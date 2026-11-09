@@ -1,6 +1,6 @@
 // Kernel Ideas service worker: caches the app shell so it opens fast and offline.
-const CACHE = "kernel-v3";
-const SHELL = ["/", "/static/icons/favicon.svg", "/static/icons/icon-192.png", "/manifest.webmanifest"];
+const CACHE = "kernel-v4";
+const SHELL = ["/", "/static/icons/favicon.svg", "/static/icons/icon-192.png", "/manifest.webmanifest", "/static/covers.js"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

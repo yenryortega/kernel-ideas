@@ -40,6 +40,13 @@ Cada `git push` vuelve a desplegar la app automáticamente.
 Edita `content.py`, agrega una fuente con `S(...)` y sus ideas con `I(...)`, y haz push.
 La app sincroniza el contenido al arrancar sin borrar tu progreso.
 
+### Portadas
+
+Cada fuente tiene una portada original dibujada en SVG en `static/covers.js` (sin imágenes externas).
+Para darle portada propia a una fuente nueva, agrega una entrada en `MOTIFS` con el slug de su título
+(minúsculas, lo que no sea letra o número pasa a `-`; por ejemplo `"Deep Work"` → `deep-work`).
+Las fuentes sin entrada usan una portada genérica según su formato (libro, artículo, video o podcast).
+
 ## Correr en local
 
 ```bash
