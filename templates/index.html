@@ -582,7 +582,29 @@ h1, h2, h3 { text-wrap: balance; }
 .toast.out { opacity: 0; transform: translate(-50%, 8px) scale(.96); transition: opacity .18s ease-out, transform .18s ease-out; }
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 12px) scale(.94); } }
 
+/* topic row: scrollable with mouse wheel, drag and arrow buttons; edges fade where more tiles hide */
+.scroller { position: relative; }
+.scroller .tiles { scroll-behavior: smooth; }
+.scroller .tiles.grabbing { scroll-behavior: auto; cursor: grabbing; }
+.scroller .tiles.grabbing .tile { pointer-events: none; }
+.scroller[data-r] .tiles { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); }
+.scroller[data-l] .tiles { -webkit-mask-image: linear-gradient(to right, transparent, #000 56px);
+  mask-image: linear-gradient(to right, transparent, #000 56px); }
+.scroller[data-l][data-r] .tiles { -webkit-mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent); }
+.sc-btn { position: absolute; top: 50%; z-index: 2; width: 38px; height: 38px; margin-top: -19px; border: none; border-radius: 50%;
+  background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent), 0 6px 16px -6px color-mix(in srgb, var(--ink) 35%, transparent);
+  transition: opacity .2s ease, transform .15s var(--ease-out); }
+.sc-btn.l { left: -8px; } .sc-btn.r { right: -8px; }
+.sc-btn:active { transform: scale(.92); }
+.scroller[data-l] .sc-btn.l, .scroller[data-r] .sc-btn.r { opacity: 1; pointer-events: auto; }
+@media (hover: hover) and (pointer: fine) { .scroller .tiles { cursor: grab; } }
+@media (hover: none), (pointer: coarse) { .sc-btn { display: none; } }
+
 @media (prefers-reduced-motion: reduce) {
+  .scroller .tiles { scroll-behavior: auto; }
   .deck::before, .deck::after, .card, .card.settle, .card.out-l, .card.out-r, .progress span, .cover-tile .cover, .ring-fill,
   .tab-ind, .sheet-list .ck, .sheet.closing, .scrim.closing, .toast.out { transition: none; }
   .card-motif, .round.big.pop svg, .burst i, .skel, .covers.enter .cover-tile, .covers.enter .group-h, .src-hero > div > *, .idea-list .idea-row,
@@ -646,7 +668,11 @@ h1, h2, h3 { text-wrap: balance; }
     <!-- FEED -->
     <section id="view-feed" aria-label="Idea feed">
       <div id="filters">
-        <div class="tiles" id="tiles" role="toolbar" aria-label="Filter by topic"></div>
+        <div class="scroller" id="tilesWrap">
+          <button class="sc-btn l" type="button" data-dir="-1" aria-label="Previous topics" tabindex="-1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="tiles" id="tiles" role="toolbar" aria-label="Filter by topic"></div>
+          <button class="sc-btn r" type="button" data-dir="1" aria-label="More topics" tabindex="-1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
         <div class="seg" id="kinds" role="toolbar" aria-label="Filter by format"></div>
       </div>
       <div class="context" id="context" hidden></div>
@@ -980,11 +1006,49 @@ function renderGoal() {
   animateIn($("goal"));
 }
 
+/* Horizontal chip rows: the mouse wheel scrolls them sideways, a mouse can drag them,
+   and arrow buttons / edge fades show when there is more to see. Touch keeps native scrolling. */
+function scrollRow(row, wrap) {
+  const sync = () => {
+    if (!wrap) return;
+    const max = row.scrollWidth - row.clientWidth;
+    wrap.toggleAttribute("data-l", row.scrollLeft > 4);
+    wrap.toggleAttribute("data-r", row.scrollLeft < max - 4);
+  };
+  row.addEventListener("scroll", sync, { passive: true });
+  window.addEventListener("resize", sync);
+  row.addEventListener("wheel", e => {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;           // trackpad side-swipe already works
+    const max = row.scrollWidth - row.clientWidth; if (max <= 0) return;
+    const atEdge = (e.deltaY < 0 && row.scrollLeft <= 0) || (e.deltaY > 0 && row.scrollLeft >= max - 1);
+    if (atEdge) return;                                              // let the page scroll on at the ends
+    e.preventDefault(); row.style.scrollBehavior = "auto"; row.scrollLeft += e.deltaY; row.style.scrollBehavior = "";
+  }, { passive: false });
+  let x0 = null, left0 = 0, moved = false;
+  row.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse" || e.button !== 0) return; x0 = e.clientX; left0 = row.scrollLeft; moved = false; });
+  row.addEventListener("pointermove", e => {
+    if (x0 === null) return; const dx = e.clientX - x0;
+    if (!moved && Math.abs(dx) > 5) { moved = true; row.classList.add("grabbing"); try { row.setPointerCapture(e.pointerId); } catch {} }
+    if (moved) row.scrollLeft = left0 - dx;
+  });
+  const end = () => { if (x0 === null) return; x0 = null; if (moved) setTimeout(() => row.classList.remove("grabbing"), 0); };
+  row.addEventListener("pointerup", end); row.addEventListener("pointercancel", end);
+  row.addEventListener("click", e => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+  if (wrap) wrap.querySelectorAll(".sc-btn").forEach(b => b.onclick = () => row.scrollBy({ left: +b.dataset.dir * row.clientWidth * .8 }));
+  return sync;
+}
+let syncTiles = () => {};
+
 /* ── feed ── */
 function renderFilters() {
   const opts = [["all", "All", "var(--ink)"], ...Object.entries(TOPICS).map(([k, v]) => [k, v.label, v.c])];
   $("tiles").innerHTML = opts.map(([k, l, c]) =>
     `<button class="tile" data-t="${k}" style="--tc:${c}${k === "all" ? ";color:var(--bg)" : ""}" aria-pressed="${k === state.topic}"><span class="tile-art">${k === "all" ? icon("all", 26) : illo(k, "tile-illo") + `<span class="tile-ic">${icon(k, 24)}</span>`}</span><span>${l}</span></button>`).join("");
+  requestAnimationFrame(() => {
+    const on = $("tiles").querySelector('[aria-pressed="true"]');
+    if (on) on.scrollIntoView({ inline: "nearest", block: "nearest", behavior: reduced() ? "auto" : "smooth" });
+    syncTiles();
+  });
   $("kinds").innerHTML = [["all", "All formats"], ...Object.entries(KINDS).map(([k, v]) => [k, v + "s"])].map(([k, l]) =>
     `<button data-k="${k}" aria-pressed="${k === state.kind}">${k !== "all" ? icon(k, 15, 2) : ""}${l}</button>`).join("");
 }
@@ -1454,6 +1518,7 @@ $("gearBtn").addEventListener("click", () => {
 document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("shell").hidden) loadStats(); });
 
 bindSwipe(); setupAdd();
+syncTiles = scrollRow($("tiles"), $("tilesWrap")); scrollRow($("kinds")); scrollRow($("exKinds"));
 api("/api/me").then(d => d.logged_in ? boot() : showLogin()).catch(() => showLogin());
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 })();
