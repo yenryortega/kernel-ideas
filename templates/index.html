@@ -459,6 +459,133 @@ h1, h2, h3 { text-wrap: balance; }
 .tabs { align-items: center; }
 .tabs .add-tab { align-self: stretch; justify-content: center; }
 .tabs .add-tab span { margin-top: 0; width: 48px; height: 48px; border-radius: 16px; box-shadow: 0 8px 18px -10px var(--hot); }
+
+/* ───────────── v3: motion + depth ───────────── */
+:root { --ease-out: cubic-bezier(.23, 1, .32, 1); --ease-in-out: cubic-bezier(.77, 0, .175, 1); --spring: cubic-bezier(.34, 1.4, .64, 1); }
+
+/* feed: the next two cards peek out behind the current one */
+.deck { position: relative; isolation: isolate; margin-bottom: 22px; }
+.deck::before, .deck::after { content: ""; position: absolute; inset: 0; border-radius: 32px; z-index: -1; pointer-events: none;
+  transition: transform .35s var(--ease-out), background-color .35s var(--ease-out), opacity .35s var(--ease-out); }
+.deck::before { background: color-mix(in srgb, var(--tc2, var(--bg)) 62%, var(--bg));
+  transform: translateY(calc(12px - 8px * var(--pull, 0))) scale(calc(.94 + .04 * var(--pull, 0))); }
+.deck::after { z-index: -2; background: color-mix(in srgb, var(--tc3, var(--bg)) 32%, var(--bg));
+  transform: translateY(calc(22px - 10px * var(--pull, 0))) scale(calc(.88 + .06 * var(--pull, 0))); }
+.deck.dragging::before, .deck.dragging::after { transition: none; }
+.deck.is-empty::before, .deck.is-empty::after { display: none; }
+
+.card { transition: transform .32s var(--ease-out), opacity .32s var(--ease-out); will-change: transform; }
+.card.out-l, .card.out-r { transition: transform .26s var(--ease-out), opacity .22s var(--ease-out); }
+.card.out-l { transform: translateX(-120%) rotate(-12deg); }
+.card.out-r { transform: translateX(120%) rotate(12deg); }
+.card.in { transform: translateY(14px) scale(.96); opacity: 0; }
+.card.settle { transition: transform .5s var(--spring); }
+/* drag hint: "Next →" / "← Back" fades in as you pull */
+.card::after { content: attr(data-hint); position: absolute; top: 18px; right: 18px; z-index: 3; padding: 7px 12px; border-radius: 999px;
+  background: rgba(255,255,255,.94); color: var(--tc); font: 800 .7rem var(--body); letter-spacing: .1em; text-transform: uppercase;
+  opacity: var(--hint, 0); transform: scale(calc(.85 + .15 * var(--hint, 0))); pointer-events: none; }
+.progress span { transition: background-color .3s var(--ease-out); }
+
+/* save: star pops and throws a little burst */
+.round.big { position: relative; overflow: visible; }
+.round.big.pop svg { animation: starpop .45s var(--spring); }
+.burst { position: absolute; inset: 0; pointer-events: none; }
+.burst i { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px; border-radius: 50%; background: var(--hot);
+  transform: rotate(var(--a)) translateY(0); animation: burst .6s var(--ease-out) forwards; }
+.burst i:nth-child(even) { width: 5px; height: 5px; margin: -2.5px; background: var(--c2, #ffb347); }
+@keyframes burst { to { transform: rotate(var(--a)) translateY(-50px) scale(.4); opacity: 0; } }
+@keyframes starpop { 40% { transform: scale(1.3); } }
+
+/* skeletons while loading */
+.skel { background: linear-gradient(100deg, var(--surface-2) 30%, color-mix(in srgb, var(--surface) 70%, var(--surface-2)) 50%, var(--surface-2) 70%);
+  background-size: 300% 100%; animation: shimmer 1.3s linear infinite; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.skel-card { border-radius: 32px; height: 560px; }
+.skel-cover { aspect-ratio: 3 / 4; border-radius: 10px; }
+.skel-line { height: 10px; border-radius: 6px; margin-top: 8px; width: 70%; }
+
+/* library: richer covers */
+.cover .gloss { position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(115deg, rgba(255,255,255,.24) 0%, transparent 34%, transparent 66%, rgba(0,0,0,.14) 100%); }
+.cover .cv-illo { position: absolute; z-index: 2; right: 6%; top: 18%; width: 46%; height: auto; object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgba(0,0,0,.25)); }
+.cover.video .cv-illo, .cover.podcast .cv-illo, .cover.mini .cv-illo { display: none; }
+.cover-tile .cover { transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .cover-tile:hover .cover { transform: translateY(-5px) rotate(-1.2deg); box-shadow: 0 24px 34px -18px var(--tc); }
+}
+.covers.enter .cover-tile, .covers.enter .group-h { animation: rise .45s var(--ease-out) both; animation-delay: calc(min(var(--i, 0), 14) * 35ms); }
+.src-hero .cover { view-transition-name: var(--vt, none); }
+.src-hero > div > * { animation: rise .4s var(--ease-out) both; }
+.src-hero > div > :nth-child(2) { animation-delay: .05s; }
+.src-hero > div > :nth-child(3) { animation-delay: .1s; }
+.idea-list .idea-row { animation: rise .4s var(--ease-out) both; animation-delay: calc(min(var(--i, 0), 10) * 30ms); }
+
+/* progress: things fill in */
+.ring-fill { transition: stroke-dashoffset .9s var(--ease-out); }
+.heat .c { animation: cell .35s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 12ms); }
+@keyframes cell { from { opacity: 0; transform: scale(.7); } }
+.trow .track span { transform-origin: left center; animation: grow .8s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 40ms); }
+@keyframes grow { from { transform: scaleX(0); } }
+.panel { animation: rise .45s var(--ease-out) both; }
+#progressBody > :nth-child(2) { animation-delay: .06s; }
+#progressBody > :nth-child(3) { animation-delay: .12s; }
+.goal-ring.just svg { animation: glow 1.2s var(--ease-out); border-radius: 50%; }
+@keyframes glow { 30% { transform: scale(1.15); filter: drop-shadow(0 0 6px var(--hot)); } }
+
+/* celebration */
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 40; overflow: hidden; }
+.confetti i { position: absolute; left: var(--x); top: var(--y); width: 8px; height: 12px; border-radius: 2px; background: var(--c);
+  animation: fall 1.3s var(--ease-out) forwards; animation-delay: var(--d, 0s); }
+@keyframes fall { to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+
+/* tab bar: sliding indicator + icon pop */
+.tab-ind { position: absolute; left: 0; top: 0; border-radius: 14px; pointer-events: none; opacity: 0;
+  background: color-mix(in srgb, var(--hot) 13%, transparent);
+  transition: transform .32s var(--ease-in-out), opacity .2s ease; }
+.tab-ind.ready { opacity: 1; }
+.tab-ind.no-anim { transition: none; }
+.tabs a { position: relative; z-index: 1; }
+.tabs a[aria-current="page"] svg { animation: tabpop .4s var(--spring); }
+@keyframes tabpop { 40% { transform: scale(1.18) translateY(-1px); } }
+
+/* view transitions between screens (Chrome/Edge/Safari 18+) */
+.top { view-transition-name: top; }
+.tabs { view-transition-name: tabs; }
+::view-transition-old(top), ::view-transition-new(top), ::view-transition-old(tabs), ::view-transition-new(tabs) { animation: none; }
+::view-transition-old(tabs), ::view-transition-old(top) { opacity: 0; }
+::view-transition-old(root) { animation: vt-out .16s var(--ease-out) both; }
+::view-transition-new(root) { animation: vt-in .3s var(--ease-out) both; }
+::view-transition-group(hero-cover) { animation-duration: .38s; animation-timing-function: var(--ease-in-out); }
+@keyframes vt-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(10px); } }
+
+/* sheet + toast enter/exit */
+.scrim { animation: fade .25s var(--ease-out); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
+.sheet { animation: up .3s var(--ease-out); touch-action: none; }
+.sheet-list { touch-action: pan-y; }
+.sheet.dragging { animation: none; transition: none; }
+.sheet.closing { animation: none; transform: translateY(105%); transition: transform .22s var(--ease-out); }
+.scrim.closing { opacity: 0; transition: opacity .22s var(--ease-out); }
+@keyframes up { from { transform: translateY(100%); } }
+@keyframes fade { from { opacity: 0; } }
+.sheet-list button { animation: rise .35s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
+.sheet-list .ck { transition: background-color .2s var(--ease-out), border-color .2s var(--ease-out), transform .3s var(--spring); }
+.sheet-list button[aria-pressed="true"] .ck { transform: scale(1.08); }
+.toast { animation: toast-in .32s var(--spring); white-space: normal; text-align: center; width: max-content;
+  max-width: min(420px, calc(100vw - 32px)); box-shadow: 0 12px 28px -12px rgba(0,0,0,.45); }
+.toast.out { opacity: 0; transform: translate(-50%, 8px) scale(.96); transition: opacity .18s ease-out, transform .18s ease-out; }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 12px) scale(.94); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .deck::before, .deck::after, .card, .card.settle, .card.out-l, .card.out-r, .progress span, .cover-tile .cover, .ring-fill,
+  .tab-ind, .sheet-list .ck, .sheet.closing, .scrim.closing, .toast.out { transition: none; }
+  .round.big.pop svg, .burst i, .skel, .covers.enter .cover-tile, .covers.enter .group-h, .src-hero > div > *, .idea-list .idea-row,
+  .heat .c, .trow .track span, .panel, .goal-ring.just svg, .confetti i, .tabs a[aria-current="page"] svg, .scrim, .sheet,
+  .sheet-list button, .toast { animation: none; }
+  .burst, .confetti { display: none; }
+  .cover-tile:hover .cover { transform: none; }
+}
 {% endraw %}</style>
 </head>
 <body>
@@ -519,7 +646,7 @@ h1, h2, h3 { text-wrap: balance; }
       </div>
       <div class="context" id="context" hidden></div>
       <div class="progress" id="bar" aria-hidden="true"></div>
-      <article class="card" id="card" aria-live="polite"></article>
+      <div class="deck" id="deck"><article class="card" id="card" aria-live="polite"></article></div>
       <div class="controls">
         <button class="round" id="prev" aria-label="Previous idea"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
         <button class="round big" id="save" aria-label="Save to a board"></button>
@@ -614,6 +741,7 @@ h1, h2, h3 { text-wrap: balance; }
   </main>
 
   <nav class="tabs" aria-label="Sections">
+    <span class="tab-ind" id="tabInd" aria-hidden="true"></span>
     <a href="#feed" data-tab="feed"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h6"/></svg>Feed</a>
     <a href="#explore" data-tab="explore"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5a2 2 0 0 1 2-2h3v18H6a2 2 0 0 1-2-2zM9 3h4v18H9zM14.5 4.5l3.8-1 3 15.5-3.8 1z"/></svg>Library</a>
     <a href="#add" data-tab="add" class="add-tab" aria-label="New idea"><span><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></a>
@@ -722,7 +850,11 @@ async function api(path, opts = {}) {
   if (!res.ok) throw new Error(data.error || "Something went wrong. Check your connection and try again.");
   return data;
 }
-let tt; function toast(m) { const t = $("toast"); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 2000); }
+let tt, tt2; function toast(m) {
+  const t = $("toast"); clearTimeout(tt); clearTimeout(tt2);
+  t.classList.remove("out"); t.textContent = m; t.hidden = true; void t.offsetWidth; t.hidden = false;
+  tt = setTimeout(() => { t.classList.add("out"); tt2 = setTimeout(() => { t.hidden = true; t.classList.remove("out"); }, 190); }, 2200);
+}
 function fail(e) { if (e.message !== "auth") toast(e.message); }
 
 /* ── generative art (seeded so each idea/source always looks the same) ── */
@@ -770,16 +902,53 @@ function kindArt(src) {
 function cover(src, mini = false) {
   const topic = src.topic || (src.ideaTopic) || "focus";
   return `<div class="cover ${src.kind}${mini ? " mini" : ""}" style="--tc:${tc(topic)}">${kindArt(src)}
+    ${mini ? "" : illo(topic, "cv-illo")}<i class="gloss"></i>
     <span class="kb">${icon(src.kind, 12, 2.2)}${KINDS[src.kind]}</span>
     ${src.kind === "video" ? `<span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg></span>` : ""}
     <div class="ct"><b>${esc(src.title)}</b><small>${esc(src.author || "")}</small></div></div>`;
 }
-function ring(v, max, size = 46, color = "var(--hot)", width = 5) {
+/* Ring renders at `from` (0..1) and animateIn() sweeps it to its real value. */
+function ring(v, max, size = 46, color = "var(--hot)", width = 5, from = 0) {
   const r = (size - width) / 2, c = 2 * Math.PI * r, p = max ? Math.min(v / max, 1) : 0, h = size / 2;
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
     <circle cx="${h}" cy="${h}" r="${r}" fill="none" stroke="var(--line)" stroke-width="${width}"/>
-    <circle cx="${h}" cy="${h}" r="${r}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round"
-      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c * (1 - p)).toFixed(1)}" transform="rotate(-90 ${h} ${h})"/></svg>`;
+    <circle class="ring-fill" cx="${h}" cy="${h}" r="${r}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round"
+      stroke-dasharray="${c.toFixed(1)}" style="stroke-dashoffset:${(c * (1 - (reduced() ? p : from))).toFixed(1)}"
+      data-off="${(c * (1 - p)).toFixed(1)}" transform="rotate(-90 ${h} ${h})"/></svg>`;
+}
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const buzz = (p = 8) => { try { navigator.vibrate && navigator.vibrate(p); } catch {} };
+const frame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+/* sweep rings and count numbers up inside `root` */
+async function animateIn(root) {
+  await frame();
+  root.querySelectorAll(".ring-fill[data-off]").forEach(c => c.style.strokeDashoffset = c.dataset.off);
+  root.querySelectorAll("[data-count]").forEach(el => {
+    const to = +el.dataset.count; if (reduced() || !to) { el.firstChild.nodeValue = to; return; }
+    const t0 = performance.now(), dur = Math.min(1100, 500 + to * 8);
+    const tick = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.firstChild.nodeValue = Math.round(to * e); if (k < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+}
+const num = v => `<b data-count="${v}">0</b>`;
+function burst(btn) {
+  if (reduced()) return; buzz(12);
+  btn.classList.remove("pop"); void btn.offsetWidth; btn.classList.add("pop");
+  const b = document.createElement("span"); b.className = "burst";
+  b.innerHTML = Array.from({ length: 10 }, (_, i) => `<i style="--a:${i * 36 + 8}deg"></i>`).join("");
+  btn.appendChild(b); setTimeout(() => b.remove(), 650);
+}
+function confetti(fromEl) {
+  buzz([20, 40, 30]); if (reduced()) return;
+  const r = (fromEl || document.body).getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+  const colors = [...Object.values(TOPICS).map(t => t.c), "#e4572e", "#ffb347", "#86e3b9"];
+  const box = document.createElement("div"); box.className = "confetti"; box.setAttribute("aria-hidden", "true");
+  box.innerHTML = Array.from({ length: 36 }, (_, i) => {
+    const a = Math.random() * Math.PI - Math.PI, d = 90 + Math.random() * 220;
+    return `<i style="--x:${x}px;--y:${y}px;--c:${colors[i % colors.length]};--dx:${(Math.cos(a) * d).toFixed(0)}px;--dy:${(Math.abs(Math.sin(a)) * d * .6 + 160 + Math.random() * 260).toFixed(0)}px;--r:${(Math.random() * 720 - 360).toFixed(0)}deg;--d:${(Math.random() * .12).toFixed(2)}s"></i>`;
+  }).join("");
+  document.body.appendChild(box); setTimeout(() => box.remove(), 1600);
 }
 
 /* ── state ── */
@@ -798,7 +967,9 @@ function renderGoal() {
   const done = s.today >= GOAL, extra = s.today - GOAL;
   $("goal").setAttribute("aria-label", `${s.streak} day streak. ${s.today} of ${GOAL} ideas today.`);
   $("goal").innerHTML = `<span class="streak" title="Day streak"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 2c1 3.5-1.5 5-1.5 7.5 0 1.4 1 2.5 2.3 2.5 1.6 0 2.4-1.4 2.2-3.2C17.5 10.5 19 13 19 15.5 19 19.1 15.9 22 12 22s-7-2.9-7-6.5C5 10.4 10.8 8 12 2z"/></svg>${s.streak}</span>
-    <div class="goal-ring${done ? " done" : ""}">${ring(Math.min(s.today, GOAL), GOAL)}<b>${done ? `${GOAL}/${GOAL}` : `${s.today}/${GOAL}`}</b></div>${extra > 0 ? `<span class="bonus">+${extra}</span>` : ""}`;
+    <div class="goal-ring${done ? " done" : ""}${state.justDone ? " just" : ""}">${ring(Math.min(s.today, GOAL), GOAL, 46, "var(--hot)", 5, state.goalP ?? 0)}<b>${done ? `${GOAL}/${GOAL}` : `${s.today}/${GOAL}`}</b></div>${extra > 0 ? `<span class="bonus">+${extra}</span>` : ""}`;
+  state.goalP = Math.min(s.today / GOAL, 1); state.justDone = false;
+  animateIn($("goal"));
 }
 
 /* ── feed ── */
@@ -814,6 +985,7 @@ async function loadFeed() {
   const q = new URLSearchParams();
   if (state.topic !== "all") q.set("topic", state.topic);
   if (state.kind !== "all") q.set("kind", state.kind);
+  if (!state.deck.length) { const c = $("card"); c.className = "skel skel-card"; c.removeAttribute("style"); c.innerHTML = ""; $("deck").classList.add("is-empty"); }
   try { const d = await api("/api/feed?" + q); state.deck = d.ideas; state.idx = 0; renderCard(); } catch (e) { fail(e); }
 }
 function renderContext() {
@@ -829,13 +1001,17 @@ function renderBar() {
 }
 function renderCard() {
   renderContext();
-  const it = state.deck[state.idx], card = $("card");
+  const it = state.deck[state.idx], card = $("card"), deck = $("deck");
+  /* the next two ideas tint the cards peeking out behind this one */
+  const peek = n => state.deck.length > 1 ? state.deck[(state.idx + n) % state.deck.length] : null;
+  deck.classList.toggle("is-empty", !it);
+  [peek(1), peek(2)].forEach((p, i) => deck.style.setProperty(`--tc${i + 2}`, p ? tc(p.topic) : "var(--bg)"));
   if (!it) {
     card.className = "empty-card"; card.removeAttribute("style");
     card.innerHTML = emptyState("search", "No ideas here yet", "Try another topic or format, or add your own idea from the + button.");
     $("save").disabled = $("next").disabled = $("prev").disabled = true; $("bar").innerHTML = ""; return;
   }
-  card.className = "card";
+  card.className = "card"; card.style.removeProperty("--hint"); card.removeAttribute("data-hint");
   const t = TOPICS[it.topic] || TOPICS.focus, s = it.source;
   card.style.setProperty("--tc", t.c);
   card.innerHTML = `
@@ -864,8 +1040,9 @@ function markLearned(it) {
     if (!state.stats) return;
     state.stats.today++; state.stats.total_read++;
     if (state.stats.today === 1) state.stats.streak++;
+    const hit = state.stats.today === GOAL; state.justDone = hit;
     renderGoal();
-    if (state.stats.today === GOAL) toast(`Daily goal done: ${GOAL} ideas. Extra ones count as bonus.`);
+    if (hit) { toast(`Daily goal done: ${GOAL} ideas. Extra ones count as bonus.`); confetti(document.querySelector(".goal-ring")); }
   }).catch(() => { it.read = false; });
 }
 let busy = false;
@@ -873,19 +1050,21 @@ function go(dir) {
   if (busy || !state.deck.length) return;
   const n = state.idx + dir; if (n < 0) return;
   if (dir > 0) markLearned(state.deck[state.idx]);
-  const card = $("card"), reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const card = $("card"), deck = $("deck");
   const swap = () => {
     if (n >= state.deck.length) {
       if (state.context) { state.idx = 0; toast("Back to the first idea"); } else { loadFeed(); toast("You've seen them all. Reshuffled."); return; }
     } else state.idx = n;
-    renderCard(); window.scrollTo({ top: 0 });
+    renderCard(); window.scrollTo({ top: 0, behavior: reduced() ? "auto" : "smooth" });
   };
-  if (reduce || !card.classList.contains("card")) { swap(); return; }
-  busy = true; card.style.transform = ""; card.classList.add(dir > 0 ? "out-l" : "out-r");
+  deck.style.setProperty("--pull", 0); deck.classList.remove("dragging");
+  if (reduced() || !card.classList.contains("card")) { swap(); return; }
+  busy = true; buzz(6);
+  card.classList.remove("settle"); card.style.transform = ""; card.classList.add(dir > 0 ? "out-l" : "out-r");
   setTimeout(() => {
     card.classList.add("dragging"); card.classList.remove("out-l", "out-r"); swap(); card.classList.add("in");
     requestAnimationFrame(() => requestAnimationFrame(() => { card.classList.remove("dragging", "in"); busy = false; }));
-  }, 260);
+  }, 240);
 }
 function openDeck(ideas, startId, label, back) {
   state.deck = ideas; state.idx = Math.max(0, ideas.findIndex(i => i.id === startId));
@@ -893,86 +1072,148 @@ function openDeck(ideas, startId, label, back) {
   location.hash = "#feed"; show("feed"); renderCard(); window.scrollTo({ top: 0 });
 }
 
-/* swipe */
-let sx = null, sy = null, dx = 0, swiping = false;
+/* swipe: the card follows the finger, a hint fades in, and a fast flick counts even if short */
+let sx = null, sy = null, dx = 0, swiping = false, lastX = 0, lastT = 0, vx = 0;
 function bindSwipe() {
-  const card = $("card");
-  card.addEventListener("pointerdown", e => { if (busy || !card.classList.contains("card") || e.button !== 0 || e.target.closest("a")) return; sx = e.clientX; sy = e.clientY; dx = 0; swiping = false; });
+  const card = $("card"), deck = $("deck");
+  card.addEventListener("pointerdown", e => {
+    if (busy || !card.classList.contains("card") || e.button !== 0 || e.target.closest("a")) return;
+    sx = lastX = e.clientX; sy = e.clientY; lastT = e.timeStamp; dx = vx = 0; swiping = false;
+  });
   card.addEventListener("pointermove", e => {
     if (sx === null) return; dx = e.clientX - sx;
-    if (!swiping && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(e.clientY - sy)) { swiping = true; card.classList.add("dragging"); try { card.setPointerCapture(e.pointerId); } catch {} }
-    if (swiping) card.style.transform = `translateX(${dx}px) rotate(${dx / 22}deg)`;
+    const dt = e.timeStamp - lastT; if (dt > 0) { vx = .8 * ((e.clientX - lastX) / dt) + .2 * vx; lastX = e.clientX; lastT = e.timeStamp; }
+    if (!swiping && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(e.clientY - sy)) {
+      swiping = true; card.classList.remove("settle"); card.classList.add("dragging"); deck.classList.add("dragging");
+      try { card.setPointerCapture(e.pointerId); } catch {}
+    }
+    if (!swiping) return;
+    const blocked = dx > 0 && state.idx === 0, eff = blocked ? dx * .25 : dx; // rubber-band when there is nothing behind
+    const k = Math.min(Math.abs(eff) / 110, 1);
+    card.style.transform = `translateX(${eff}px) rotate(${eff / 24}deg)`;
+    card.dataset.hint = dx < 0 ? "Next →" : "← Back";
+    card.style.setProperty("--hint", blocked ? 0 : k.toFixed(2));
+    deck.style.setProperty("--pull", dx < 0 ? k.toFixed(2) : 0);
   });
   const end = () => {
-    if (sx === null) return; sx = null; card.classList.remove("dragging");
-    if (swiping && Math.abs(dx) > 80 && !(dx > 0 && state.idx === 0)) go(dx < 0 ? 1 : -1); else card.style.transform = "";
+    if (sx === null) return; sx = null;
+    card.classList.remove("dragging"); deck.classList.remove("dragging");
+    const fling = Math.abs(vx) > .55 && Math.abs(dx) > 30 && Math.sign(vx) === Math.sign(dx);
+    if (swiping && (Math.abs(dx) > 90 || fling) && !(dx > 0 && state.idx === 0)) go(dx < 0 ? 1 : -1);
+    else if (swiping) {
+      card.classList.add("settle"); card.style.transform = ""; card.style.setProperty("--hint", 0); deck.style.setProperty("--pull", 0);
+      card.addEventListener("transitionend", () => card.classList.remove("settle"), { once: true });
+    }
     swiping = false;
   };
   card.addEventListener("pointerup", end); card.addEventListener("pointercancel", end);
 }
 
 /* ── save sheet ── */
-let sheetIdea = null;
+let sheetIdea = null, sheetWasSaved = false, sheetClosing = false;
 async function openSheet() {
   const it = state.deck[state.idx]; if (!it) return;
-  sheetIdea = it; $("scrim").hidden = $("sheet").hidden = false;
+  sheetIdea = it; sheetWasSaved = !!it.saved; buzz(6);
+  $("sheet").classList.remove("closing"); $("scrim").classList.remove("closing"); $("sheet").style.transform = "";
+  $("scrim").hidden = $("sheet").hidden = false;
   $("sheetList").innerHTML = `<p class="sub">Loading boards…</p>`;
   try { const d = await api(`/api/boards?idea=${it.id}`); state.colors = d.colors; renderSheet(d.boards); } catch (e) { fail(e); }
 }
 function renderSheet(boards) {
-  $("sheetList").innerHTML = boards.map(b => `<button type="button" data-b="${b.id}" aria-pressed="${!!b.has_idea}" style="--bc:${b.color}">
+  $("sheetList").innerHTML = boards.map((b, i) => `<button type="button" data-b="${b.id}" aria-pressed="${!!b.has_idea}" style="--bc:${b.color};--i:${i}">
     <span class="dot"></span><span class="nm">${esc(b.name)}<small>${b.count} idea${b.count === 1 ? "" : "s"}</small></span>
     <span class="ck">${b.has_idea ? icon("check", 16, 3) : ""}</span></button>`).join("");
 }
 function closeSheet() {
-  $("scrim").hidden = $("sheet").hidden = true;
-  const it = state.deck[state.idx];
-  if (it && sheetIdea && it.id === sheetIdea.id) { $("save").className = "round big" + (it.saved ? " on" : ""); $("save").innerHTML = star(it.saved); }
-  sheetIdea = null; loadStats();
+  if (sheetClosing || $("sheet").hidden) return;
+  const finish = () => {
+    sheetClosing = false;
+    $("scrim").hidden = $("sheet").hidden = true;
+    $("sheet").classList.remove("closing", "dragging"); $("scrim").classList.remove("closing"); $("sheet").style.transform = "";
+    const it = state.deck[state.idx], btn = $("save");
+    if (it && sheetIdea && it.id === sheetIdea.id) {
+      btn.className = "round big" + (it.saved ? " on" : ""); btn.innerHTML = star(it.saved);
+      if (it.saved && !sheetWasSaved) burst(btn);
+    }
+    sheetIdea = null; loadStats(); btn.focus({ preventScroll: true });
+  };
+  if (reduced()) { finish(); return; }
+  sheetClosing = true;
+  const sh = $("sheet"); sh.classList.remove("dragging"); sh.style.transform = "";
+  sh.classList.add("closing"); $("scrim").classList.add("closing");
+  setTimeout(finish, 220);
 }
+/* drag the sheet down to dismiss it */
+(() => {
+  const sh = $("sheet"); let y0 = null, dy = 0;
+  sh.addEventListener("pointerdown", e => {
+    if (e.target.closest("button, input, a") && !e.target.closest(".grab")) return;
+    y0 = e.clientY; dy = 0; try { sh.setPointerCapture(e.pointerId); } catch {}
+  });
+  sh.addEventListener("pointermove", e => {
+    if (y0 === null) return; dy = Math.max(0, e.clientY - y0);
+    if (dy > 4) { sh.classList.add("dragging"); sh.style.transform = `translateY(${dy}px)`; }
+  });
+  const end = () => {
+    if (y0 === null) return; y0 = null;
+    if (dy > 90) closeSheet();
+    else { sh.classList.remove("dragging"); sh.style.transition = "transform .3s var(--spring)"; sh.style.transform = "";
+      setTimeout(() => sh.style.transition = "", 320); }
+  };
+  sh.addEventListener("pointerup", end); sh.addEventListener("pointercancel", end);
+})();
 async function toggleBoard(btn) {
   const bid = btn.dataset.b, on = btn.getAttribute("aria-pressed") === "true";
   try {
     if (on) await api(`/api/boards/${bid}/ideas/${sheetIdea.id}`, { method: "DELETE" });
     else await api(`/api/boards/${bid}/ideas`, { method: "POST", body: { idea_id: sheetIdea.id } });
+    buzz(8);
     const d = await api(`/api/boards?idea=${sheetIdea.id}`); renderSheet(d.boards);
+    $("sheetList").querySelectorAll("button").forEach(b => b.style.animation = "none");
     sheetIdea.saved = d.boards.some(b => b.has_idea);
   } catch (e) { fail(e); }
 }
 
 /* ── library ── */
+let entering = false; // set by the router so tab switches replay the entrance, but typing in search does not
 async function renderExplore() {
   $("exKinds").innerHTML = [["all", "All"], ...Object.entries(KINDS).map(([k, v]) => [k, v + "s"])].map(([k, l]) =>
     `<button data-k="${k}" aria-pressed="${k === state.exKind}">${k !== "all" ? icon(k, 15, 2) : ""}${l}</button>`).join("");
-  if (!state.sources) {
-    $("covers").innerHTML = `<p class="sub">Loading library…</p>`;
+  const first = !state.sources, covers = $("covers");
+  if (first) {
+    covers.innerHTML = Array.from({ length: 6 }, () => `<div><div class="skel skel-cover"></div><div class="skel skel-line"></div></div>`).join("");
     try { state.sources = (await api("/api/sources")).sources; } catch (e) { fail(e); return; }
   }
+  covers.classList.toggle("enter", first || !!entering);
+  entering = false;
   const q = $("search").value.trim().toLowerCase();
   const list = state.sources.filter(s => (state.exKind === "all" || s.kind === state.exKind) &&
     (!q || (s.title + " " + (s.author || "") + " " + s.topic).toLowerCase().includes(q)));
   if (!list.length) { $("covers").innerHTML = `<div style="grid-column:1/-1">${emptyState("search", "Nothing matches “" + esc(q) + "”", "Try an author, a title or a topic.")}</div>`; return; }
   const groups = {}; list.forEach(s => (groups[s.topic] ||= []).push(s));
+  let n = 0;
   $("covers").innerHTML = Object.keys(TOPICS).filter(k => groups[k]).map(k => `
-    <div class="group-h" style="--tc:${tc(k)}"><i>${icon(k, 15, 2)}</i>${TOPICS[k].label}</div>
-    ${groups[k].map(s => `<a class="cover-tile" href="#source-${s.id}" style="--tc:${tc(s.topic)}">${cover(s)}
+    <div class="group-h" style="--tc:${tc(k)};--i:${n++}"><i>${icon(k, 15, 2)}</i>${TOPICS[k].label}</div>
+    ${groups[k].map(s => `<a class="cover-tile" href="#source-${s.id}" data-src="${s.id}" style="--tc:${tc(s.topic)};--i:${n++}">${cover(s)}
       <div class="ci"><div class="mini-track"><i style="width:${s.count ? s.read / s.count * 100 : 0}%"></i></div>
       <span>${s.read}/${s.count} ideas read</span></div></a>`).join("")}`).join("");
 }
 async function renderSource(id) {
-  const el = $("view-source"); el.innerHTML = `<p class="sub">Loading…</p>`;
+  const el = $("view-source");
+  if (!srcPrefetch.has(id)) el.innerHTML = `<div class="src-hero"><div class="skel skel-cover"></div><div><div class="skel skel-line"></div><div class="skel skel-line"></div></div></div>`;
   try {
-    const { source: s, ideas } = await api(`/api/sources/${id}`);
+    const pre = srcPrefetch.get(id); srcPrefetch.delete(id);
+    const { source: s, ideas } = (pre && Date.now() - pre.t < 8000 && await pre.p) || await api(`/api/sources/${id}`);
     el.style.setProperty("--tc", tc(s.topic));
     el.innerHTML = `
       <a class="back" href="#explore">← Library</a>
-      <div class="src-hero">${cover(s)}<div>
+      <div class="src-hero" style="--vt:hero-cover">${cover(s)}<div>
         <span class="eyebrow">${KINDS[s.kind]} · ${TOPICS[s.topic].label}</span>
         <h1>${esc(s.title)}</h1><p>${esc(s.author || "")}</p></div></div>
       ${s.blurb ? `<p class="blurb">${esc(s.blurb)}</p>` : ""}
       <div class="row-actions"><button class="cta" type="button" id="readSrc">${icon("bolt", 18, 2)}Read ${ideas.length} idea${ideas.length === 1 ? "" : "s"}</button>
         ${s.url ? `<a class="ghost" href="${esc(s.url)}" target="_blank" rel="noopener">Open original ↗</a>` : ""}</div>
-      <div class="idea-list">${ideas.map(i => `<button class="idea-row" type="button" data-open="${i.id}" style="--tc:${tc(i.topic)}">
+      <div class="idea-list">${ideas.map((i, n) => `<button class="idea-row" type="button" data-open="${i.id}" style="--tc:${tc(i.topic)};--i:${n}">
         <span class="n">${i.position + 1}</span><span><h3>${esc(i.title)}</h3><p>${esc(i.summary || "")}</p></span>
         <span class="st ${i.read ? "done" : ""}">${i.read ? icon("check", 20, 2.4) : ""}</span></button>`).join("")}</div>`;
     const open = sid => openDeck(ideas, sid, s.title, `#source-${s.id}`);
@@ -1011,7 +1252,7 @@ async function renderBoard(id, confirming = false) {
       ${confirming ? `<div class="confirm"><p>Delete <b>${esc(b.name)}</b>? The ideas stay in your library.</p>
         <div class="row-actions"><button class="cta small" type="button" id="delYes">Delete board</button><button class="ghost" type="button" id="delNo">Keep it</button></div></div>` : ""}
       <form id="renameForm" class="new-board" hidden><input id="rn" maxlength="80" value="${esc(b.name)}" aria-label="Board name"><button class="cta small" type="submit">Save</button></form>
-      <div class="idea-list">${b.ideas.length ? b.ideas.map(i => `<div class="idea-row" role="button" tabindex="0" data-open="${i.id}" style="--tc:${tc(i.topic)}">
+      <div class="idea-list">${b.ideas.length ? b.ideas.map((i, n) => `<div class="idea-row" role="button" tabindex="0" data-open="${i.id}" style="--tc:${tc(i.topic)};--i:${n}">
         <span class="n">${icon(i.topic, 22, 1.9)}</span><span><h3>${esc(i.title)}</h3><p>${esc(i.source.title)}</p></span>
         <button class="x" type="button" data-rm="${i.id}" aria-label="Remove from board">×</button></div>`).join("")
         : emptyState("empty", "This board is empty", "Tap the star under any idea to save it here.")}</div>`;
@@ -1036,17 +1277,18 @@ async function renderProgress() {
   const first = new Date(s.days[0].day + "T00:00"), lead = (first.getDay() + 6) % 7;
   const cells = [...Array(lead).fill(null), ...s.days];
   const heat = ["M", "T", "W", "T", "F", "S", "S"].map(d => `<span class="dow">${d}</span>`).join("") +
-    cells.map(d => d ? `<span class="c ${d.count ? "lit" : ""} ${d.day === dayKey() ? "today" : ""}" title="${d.day}: ${d.count} read">
+    cells.map((d, i) => d ? `<span class="c ${d.count ? "lit" : ""} ${d.day === dayKey() ? "today" : ""}" style="--i:${i}" title="${d.day}: ${d.count} read">
       ${d.count ? `<i style="opacity:${Math.min(1, .25 + d.count / GOAL * .75).toFixed(2)}"></i>` : ""}<em>${+d.day.slice(8)}</em></span>` : "<span></span>").join("");
   $("progressBody").innerHTML = `
     <div class="panel"><div class="hero-stat">${ring(s.total_read, s.total, 96, "var(--hot)", 10)}
-      <div><div class="num">${s.total_read}<span> / ${s.total}</span></div><p class="sub">ideas read from the whole library</p></div></div>
-      <div class="kpis"><div class="kpi"><b>${s.streak}</b><span>Streak</span></div><div class="kpi"><b>${s.best_streak}</b><span>Best</span></div><div class="kpi"><b>${s.saved}</b><span>Saved</span></div></div></div>
+      <div><div class="num" data-count="${s.total_read}">0<span> / ${s.total}</span></div><p class="sub">ideas read from the whole library</p></div></div>
+      <div class="kpis"><div class="kpi">${num(s.streak)}<span>Streak</span></div><div class="kpi">${num(s.best_streak)}<span>Best</span></div><div class="kpi">${num(s.saved)}<span>Saved</span></div></div></div>
     <div class="panel"><h3>Last 4 weeks</h3><div class="heat">${heat}</div><div class="legend">Goal ${GOAL} ideas a day <i></i></div></div>
-    <div class="panel"><h3>By topic</h3>${s.by_topic.map(t => `<div class="trow" style="--tc:${tc(t.topic)}"><span class="ti">${icon(t.topic, 17, 2)}</span>
+    <div class="panel"><h3>By topic</h3>${s.by_topic.map((t, i) => `<div class="trow" style="--tc:${tc(t.topic)};--i:${i}"><span class="ti">${icon(t.topic, 17, 2)}</span>
       <div class="tn"><span>${TOPICS[t.topic].label}</span><div class="track"><span style="width:${t.total ? t.read / t.total * 100 : 0}%"></span></div></div>
       <span class="tv">${t.read}/${t.total}</span></div>`).join("")}</div>
 `;
+  animateIn($("progressBody"));
 }
 
 /* ── add ── */
@@ -1076,19 +1318,60 @@ function renderCredits() {
 function show(view) {
   ["feed", "explore", "source", "boards", "board", "progress", "add", "credits", "settings"].forEach(v => $("view-" + v).hidden = v !== view);
   document.querySelectorAll(".tabs a").forEach(a => a.dataset.tab === TAB_OF[view] ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  moveTabInd();
   const gear = $("gearBtn"), open = view === "settings" || view === "credits";
   gear.classList.toggle("on", open); gear.setAttribute("aria-expanded", open); gear.setAttribute("aria-label", open ? "Close settings" : "Settings"); gear.title = gear.getAttribute("aria-label");
 }
-function route() {
-  const h = location.hash.slice(1) || "feed";
+/* sliding highlight behind the active tab (hidden on + and Settings) */
+function moveTabInd(instant = false) {
+  const ind = $("tabInd"), a = document.querySelector('.tabs a[aria-current="page"]:not(.add-tab)');
+  if (!a) { ind.classList.remove("ready"); return; }
+  const first = !ind.classList.contains("ready");
+  ind.classList.toggle("no-anim", instant || first);
+  Object.assign(ind.style, { width: a.offsetWidth + "px", height: a.offsetHeight + "px", top: a.offsetTop + "px",
+    transform: `translateX(${a.offsetLeft}px)` });
+  ind.classList.add("ready");
+}
+window.addEventListener("resize", () => moveTabInd(true));
+
+function render(h) {
   const [view, id] = h.split(/-(.+)/);
-  if (view === "source" && id) { show("source"); renderSource(id); }
-  else if (view === "board" && id) { show("board"); renderBoard(id); }
+  let p = null;
+  entering = view === "explore";
+  if (view === "source" && id) { show("source"); p = renderSource(id); }
+  else if (view === "board" && id) { show("board"); p = renderBoard(id); }
   else if (["explore", "boards", "progress", "add", "credits", "settings"].includes(view)) {
     show(view);
-    if (view === "explore") renderExplore(); if (view === "boards") renderBoards(); if (view === "progress") renderProgress(); if (view === "credits") renderCredits(); if (view === "settings") renderSettings();
-  } else { show("feed"); if (!state.deck.length) loadFeed(); }
+    if (view === "explore") p = renderExplore(); if (view === "boards") p = renderBoards(); if (view === "progress") p = renderProgress();
+    if (view === "credits") renderCredits(); if (view === "settings") renderSettings();
+  } else { show("feed"); if (!state.deck.length) p = loadFeed(); }
   window.scrollTo({ top: 0 });
+  return p;
+}
+/* source page prefetch: started when a cover is touched, so the shared-cover transition has its target ready */
+const srcPrefetch = new Map();
+function prefetchSource(id) {
+  const old = srcPrefetch.get(id); if (old && Date.now() - old.t < 8000) return;
+  srcPrefetch.set(id, { t: Date.now(), p: api(`/api/sources/${id}`).catch(() => null) });
+}
+document.addEventListener("pointerdown", e => { const t = e.target.closest("[data-src]"); if (t) prefetchSource(t.dataset.src); }, true);
+document.addEventListener("pointerover", e => { const t = e.target.closest("[data-src]"); if (t) prefetchSource(t.dataset.src); }, true);
+
+let fromHash = "";
+function route() {
+  const h = location.hash.slice(1) || "feed", prev = fromHash; fromHash = h;
+  if (!document.startViewTransition || reduced() || !prev || prev === h) { render(h); return; }
+  /* the tapped cover flies into the source hero, and back again */
+  const srcId = h.startsWith("source-") ? h.slice(7) : prev.startsWith("source-") && h === "explore" ? prev.slice(7) : null;
+  const tile = id => document.querySelector(`#view-explore .cover-tile[data-src="${CSS.escape(id)}"] .cover`);
+  if (srcId && prev === "explore") { const c = tile(srcId); if (c) c.style.viewTransitionName = "hero-cover"; }
+  const vt = document.startViewTransition(async () => {
+    document.querySelectorAll('#view-explore .cover[style*="view-transition-name"]').forEach(c => c.style.viewTransitionName = "");
+    const p = render(h);
+    await Promise.race([p, new Promise(r => setTimeout(r, 450))]);
+    if (srcId && h === "explore") { const c = tile(srcId); if (c) c.style.viewTransitionName = "hero-cover"; }
+  });
+  vt.finished.finally(() => document.querySelectorAll('#view-explore .cover[style*="view-transition-name"]').forEach(c => c.style.viewTransitionName = ""));
 }
 
 /* ── settings ── */
